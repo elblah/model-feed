@@ -10,7 +10,7 @@ CN public holidays are always off-peak). Half-open intervals [start, end).
 """
 
 MULT = 2.0
-PROVIDERS = ("opencode-go",)
+PROVIDERS = ("opencode-go", "cline-pass")
 NAME_MATCH = ("deepseek",)
 WINDOWS = (
     {"days": "Mon-Fri", "start": "01:00", "end": "04:00", "tz": "UTC"},

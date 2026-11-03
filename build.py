@@ -26,7 +26,8 @@ sys.path.insert(0, HERE)
 
 from lib import schema  # noqa: E402
 from lib.fetch import FetchError  # noqa: E402
-from sources import gocaps, modelsdev, official, zenprivacy  # noqa: E402
+from sources import (clinepass, clinerec, effort, gocaps, modelsdev,
+                     official, zenprivacy)  # noqa: E402
 
 MANIFEST = "manifest.json"
 
@@ -36,7 +37,7 @@ TARGETS = (
     {"feed": "opencode-zen-free", "source": "opencode",
      "free_only": True, "privacy": True},
     {"feed": "nvidia", "source": "nvidia", "official": "nvidia"},
-    {"feed": "cline-pass", "source": "cline-pass"},
+    {"feed": "cline-pass", "source": "cline-pass", "prices": "clinepass"},
 )
 
 
@@ -81,6 +82,8 @@ class Enrichment:
         self.no_network = no_network
         self._caps = None
         self._privacy = None
+        self._prices = {}
+        self._roster = None
         self._official = {}
 
     def caps(self):
@@ -110,6 +113,64 @@ class Enrichment:
             self._official[provider] = ids or []
         return self._official[provider]
 
+    def prices(self, name):
+        """Reference-price tables that beat models.dev (docs are the truth)."""
+        if name not in self._prices:
+            loaders = {"clinepass": clinepass.load}
+            if name not in loaders:
+                raise FetchError("unknown price source %r" % name)
+            prices, _meta = loaders[name](self.cache_dir, self.no_network)
+            log("  price %s: %d rows" % (name, len(prices)))
+            self._prices[name] = prices
+        return self._prices[name]
+
+    def roster(self):
+        """Cline offered-model roster; optional, so failures are non-fatal."""
+        if self._roster is None:
+            try:
+                self._roster, meta = clinerec.load(self.cache_dir, self.no_network)
+                log("  rost  %d offered, %d free%s"
+                    % (len(self._roster["roster"]), len(self._roster["free"]),
+                       "" if not meta.get("error") else " (stale: %s)" % meta["error"]))
+            except FetchError as exc:
+                log("  rost  unavailable: %s" % exc)
+                self._roster = {"roster": [], "free": []}
+        return self._roster
+
+
+def enrich_cline_pass(payload, api, provider_id, prices, helpers):
+    """Docs prices + allowance + roster + resolved effort ladders."""
+    entries = payload["models"]
+    priced, unpriced = clinepass.apply(entries, prices)
+    extra = clinepass.docs_entries(prices, [item["id"] for item in entries])
+    if extra:
+        entries.extend(extra)
+        entries.sort(key=lambda item: item["id"])
+        log("  note  %d docs-only model(s) added: %s"
+            % (len(extra), ", ".join(item["id"] for item in extra)))
+
+    resolved = 0
+    for entry in entries:
+        ladder, source = effort.resolve(api, provider_id, entry["id"])
+        if ladder:
+            entry["effort_ladder"] = ladder
+            entry["effort_default"] = effort.default_effort(ladder)
+            resolved += 1
+        entry["effort_source"] = source or ""
+
+    payload["levers"]["prices"] = {
+        "source": clinepass.URL,
+        "priced": len(priced),
+        "modelsdev_fallback": unpriced,
+    }
+    payload["levers"]["caps"] = dict(clinepass.allowance(), enabled=True)
+    payload["levers"]["effort"] = {"policy": effort.DEFAULT_POLICY,
+                                   "resolved": resolved}
+    roster = helpers.roster()
+    payload["roster"] = {"provider": provider_id,
+                         "ids": roster["roster"],
+                         "free": roster["free"]}
+
 
 def build_one(api, target, source_meta, helpers, out_dir, pretty):
     """Write one feed file. Returns (feed id, manifest entry, payload)."""
@@ -122,8 +183,14 @@ def build_one(api, target, source_meta, helpers, out_dir, pretty):
     if target.get("official"):
         kwargs["official"] = helpers.official(target["official"])
 
+    if target.get("prices"):
+        kwargs["prices"] = helpers.prices(target["prices"])
+
     payload = modelsdev.build_provider(api, target["source"], source_meta,
                                        **kwargs)
+    if target.get("prices") == "clinepass":
+        enrich_cline_pass(payload, api, target["source"], kwargs["prices"],
+                          helpers)
     data = modelsdev.dumps(payload, pretty=pretty)
     name = "%s.json" % feed_id
     atomic_write(os.path.join(out_dir, name), data)

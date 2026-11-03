@@ -62,7 +62,7 @@ def model_entry(raw, provider_api, peak_mult=None):
         entry["upstream_id"] = upstream_id
     # Optional keys are only emitted when set, to keep payloads small.
     for key in ("status", "official", "bare", "cap_usd", "promo", "trains",
-                "privacy"):
+                "privacy", "reasoning_options", "interleaved", "price_source"):
         if raw.get(key) is not None:
             entry[key] = raw[key]
     return entry

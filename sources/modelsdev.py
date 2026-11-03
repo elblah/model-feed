@@ -101,7 +101,8 @@ def _apply_privacy(entries, privacy):
 
 
 def build_provider(api, provider_id, source_meta=None, feed_id=None,
-                   free_only=False, caps=None, privacy=None, official=None):
+                   free_only=False, caps=None, privacy=None, official=None,
+                   prices=None):
     """Normalise one provider into a published feed payload."""
     raw_provider = api.get(provider_id)
     if not isinstance(raw_provider, dict):
