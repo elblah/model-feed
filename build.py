@@ -51,6 +51,8 @@ def atomic_write(path, data):
     try:
         with os.fdopen(fd, "wb") as handle:
             handle.write(data)
+        # mkstemp creates 0600; published files must be world-readable.
+        os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except BaseException:
         try:

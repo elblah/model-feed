@@ -40,8 +40,10 @@ jobs:
       - name: Build feed
         run: python3 build.py --out out --cache-dir .cache
 
-      - name: Publish directory layout
-        run: ls -l out
+      - name: Check output
+        run: |
+          test -s out/manifest.json
+          ls -l out
 
       - uses: actions/configure-pages@v5
         with:

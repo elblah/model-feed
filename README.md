@@ -159,6 +159,18 @@ create or rotate.
 One-time setup: push this directory to a public repo, then Settings -> Pages ->
 Source: GitHub Actions (the workflow also sets it via `enablement: true`).
 
+Notes:
+
+- Free Pages requires a public repo. Public repos get unlimited Actions
+  minutes; a run costs about 7 s.
+- Scheduled workflows are disabled automatically after 60 days without repo
+  activity; re-enable from the Actions tab if it happens.
+- The first run downloads the full upstream set (~6 MB) and the `.cache` key
+  changes every run, so continuations usually get `304 Not Modified`. Delete
+  the `upstream-*` caches if a bad body ever gets sticky.
+- A failed build exits non-zero, so the job fails and the previous deployment
+  stays live. There is no half-published state.
+
 ## Status
 
 - [x] schema v1 + manifest
@@ -169,5 +181,5 @@ Source: GitHub Actions (the workflow also sets it via `enablement: true`).
 - [x] nvidia nim official-roster merge
 - [x] clinepass prices (full cline-pass roster)
 - [x] GitHub Actions workflow (30 min cron + dispatch) + Pages publish
+- [ ] first deployed run verified against the live URL
 - [ ] thin client (manifest -> conditional GET -> list/predict)
-- [ ] GitHub Actions workflow + Pages publish
