@@ -181,5 +181,5 @@ Notes:
 - [x] nvidia nim official-roster merge
 - [x] clinepass prices (full cline-pass roster)
 - [x] GitHub Actions workflow (30 min cron + dispatch) + Pages publish
-- [ ] first deployed run verified against the live URL
+- [x] first deployed run verified against the live URL
 - [ ] thin client (manifest -> conditional GET -> list/predict)
