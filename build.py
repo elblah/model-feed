@@ -140,7 +140,7 @@ def build_one(api, target, source_meta, helpers, out_dir, pretty):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Build the models-info feed")
+    parser = argparse.ArgumentParser(description="Build the model-feed feed")
     parser.add_argument("--feed", "--providers", dest="feed", default="all",
                         help="comma-separated feed ids, or 'all' (default)")
     parser.add_argument("--out", default=os.path.join(HERE, "out"),
@@ -153,7 +153,7 @@ def main(argv=None):
                         help="indent the JSON (debugging; bigger files)")
     args = parser.parse_args(argv)
 
-    log("models-info: schema v%d" % schema.SCHEMA)
+    log("model-feed: schema v%d" % schema.SCHEMA)
     try:
         api, source_meta = modelsdev.fetch_api(args.cache_dir, args.no_network)
     except FetchError as exc:

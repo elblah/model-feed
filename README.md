@@ -1,4 +1,4 @@
-# models-info
+# model-feed
 
 Pre-processed LLM model metadata, served as small static JSON files.
 
@@ -47,7 +47,7 @@ A feed is not necessarily one provider: it can be a filtered view of one
 ## Layout
 
 ```
-models-info/
+model-feed/
   build.py              orchestrator: TARGETS -> fetch -> normalise -> out/
   lib/fetch.py          HTTP GET with gzip + conditional request + disk cache
   lib/keys.py           name/id join keys shared by sources

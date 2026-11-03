@@ -1,1 +1,1 @@
-"""Package marker for models-info data sources."""
+"""Package marker for model-feed data sources."""

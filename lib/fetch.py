@@ -1,6 +1,6 @@
 """HTTP helpers: gzip-aware GET, conditional requests, on-disk cache.
 
-Stdlib only. Every network call in models-info goes through here so that
+Stdlib only. Every network call in model-feed goes through here so that
 caching/offline behaviour stays uniform across sources.
 """
 
@@ -13,11 +13,11 @@ import urllib.error
 import urllib.request
 import zlib
 
-UA = "models-info/1 (static model metadata feed)"
+UA = "model-feed/1 (static model metadata feed)"
 TIMEOUT = 60
 CACHE_DIR_DEFAULT = os.path.join(
     os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"),
-    "models-info",
+    "model-feed",
 )
 
 

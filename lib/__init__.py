@@ -1,1 +1,1 @@
-"""Package marker for models-info internal helpers."""
+"""Package marker for model-feed internal helpers."""
