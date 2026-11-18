@@ -39,7 +39,7 @@ A feed is not necessarily one provider: it can be a filtered view of one
 
 | feed file | upstream provider | extra columns |
 | --- | --- | --- |
-| `opencode-go.json` | `opencode-go` | peak pricing, plan caps, promos, `trains` |
+| `opencode-go.json` | `opencode-go` | peak pricing, plan caps, `trains` |
 | `opencode-zen-free.json` | `opencode` (cost 0 only) | privacy tags |
 | `nvidia.json` | `nvidia` | official `/v1/models` roster |
 | `cline-pass.json` | `cline-pass` | -- |
@@ -54,7 +54,7 @@ model-feed/
   lib/peaks.py          peak-window rules (DeepSeek 2x, Mon-Fri UTC)
   lib/schema.py         normalisation helpers + schema version
   sources/modelsdev.py  models.dev/api.json -> per-feed catalogs
-  sources/gocaps.py     opencode.ai Go page -> plan caps, promos, trains
+  sources/gocaps.py     opencode.ai console Go page -> plan caps, trains
   sources/zenprivacy.py opencode.ai models page -> privacy tags
   sources/official.py   provider /v1/models rosters (nvidia, chutes)
   out/                  generated: <feed>.json + manifest.json
@@ -115,7 +115,7 @@ Optional model keys, emitted only when a source provides them:
 | `upstream_id` | real endpoint id when it differs from `id` |
 | `cost_peak` + `peak` | same price inside a peak window (`mult` x) |
 | `cap_usd` | monthly $ usage included per plan id (`levers.caps.plans`) |
-| `promo` | per-plan promo label from the caps table (`{"go": "new"}`) |
+| `promo` | per-plan promo label (`{"go": "new"}`); no source emits it right now |
 | `trains` | request data may be used for training |
 | `privacy` | privacy tag: `trains`, `zdr`, `zdr-retained` |
 | `status` | `deprecated` = gone from the official roster; clients hide it |
@@ -176,7 +176,7 @@ Notes:
 - [x] schema v1 + manifest
 - [x] models.dev source (normalised, deterministic)
 - [x] DeepSeek peak pricing (windows + `cost_peak`)
-- [x] opencode-go plan caps (go / plus / teams) + promos + training flags
+- [x] opencode-go plan caps (go / plus / teams) + training flags
 - [x] opencode zen privacy tags
 - [x] nvidia nim official-roster merge
 - [x] clinepass prices (full cline-pass roster)
