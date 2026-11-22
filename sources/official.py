@@ -17,6 +17,7 @@ from lib.fetch import FetchError, fetch_json
 ENDPOINTS = {
     "nvidia": "https://integrate.api.nvidia.com/v1/models",
     "chutes": "https://llm.chutes.ai/v1/models",
+    "opencode-go": "https://opencode.ai/zen/go/v1/models",
 }
 CACHE_TTL = 6 * 3600
 

@@ -102,7 +102,7 @@ def _apply_privacy(entries, privacy):
 
 def build_provider(api, provider_id, source_meta=None, feed_id=None,
                    free_only=False, caps=None, privacy=None, official=None,
-                   prices=None):
+                   prices=None, drop_deprecated=False):
     """Normalise one provider into a published feed payload."""
     raw_provider = api.get(provider_id)
     if not isinstance(raw_provider, dict):
@@ -141,6 +141,13 @@ def build_provider(api, provider_id, source_meta=None, feed_id=None,
 
     if privacy and _apply_privacy(entries, privacy):
         levers["privacy"] = {"enabled": True, "tags": list(zenprivacy.TAGS)}
+
+    if drop_deprecated:
+        kept = [entry for entry in entries if entry.get("status") != "deprecated"]
+        dropped = len(entries) - len(kept)
+        entries = kept
+        if dropped:
+            levers["deprecated"] = {"enabled": True, "dropped": dropped}
 
     entries.sort(key=lambda item: item["id"])
 

@@ -39,7 +39,7 @@ A feed is not necessarily one provider: it can be a filtered view of one
 
 | feed file | upstream provider | extra columns |
 | --- | --- | --- |
-| `opencode-go.json` | `opencode-go` | peak pricing, plan caps, `trains` |
+| `opencode-go.json` | `opencode-go` | peak pricing, plan caps, `trains`, official `/zen/go/v1/models` roster, deprecated dropped |
 | `opencode-zen-free.json` | `opencode` (cost 0 only) | privacy tags |
 | `nvidia.json` | `nvidia` | official `/v1/models` roster |
 | `cline-pass.json` | `cline-pass` | -- |
@@ -56,7 +56,7 @@ model-feed/
   sources/modelsdev.py  models.dev/api.json -> per-feed catalogs
   sources/gocaps.py     opencode.ai console Go page -> plan caps, trains
   sources/zenprivacy.py opencode.ai models page -> privacy tags
-  sources/official.py   provider /v1/models rosters (nvidia, chutes)
+  sources/official.py   provider /v1/models rosters (nvidia, chutes, opencode-go)
   out/                  generated: <feed>.json + manifest.json
 ```
 

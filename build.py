@@ -33,7 +33,8 @@ MANIFEST = "manifest.json"
 
 # feed id -> upstream provider id + the columns joined in from other sources.
 TARGETS = (
-    {"feed": "opencode-go", "source": "opencode-go", "caps": True},
+    {"feed": "opencode-go", "source": "opencode-go", "caps": True,
+     "official": "opencode-go", "drop_deprecated": True},
     {"feed": "opencode-zen-free", "source": "opencode",
      "free_only": True, "privacy": True},
     {"feed": "nvidia", "source": "nvidia", "official": "nvidia"},
@@ -175,19 +176,28 @@ def enrich_cline_pass(payload, api, provider_id, prices, helpers):
 def build_one(api, target, source_meta, helpers, out_dir, pretty):
     """Write one feed file. Returns (feed id, manifest entry, payload)."""
     feed_id = target["feed"]
-    kwargs = {"feed_id": feed_id, "free_only": target.get("free_only", False)}
+    kwargs = {"feed_id": feed_id, "free_only": target.get("free_only", False),
+              "drop_deprecated": target.get("drop_deprecated", False)}
     if target.get("caps"):
         kwargs["caps"] = helpers.caps()
     if target.get("privacy"):
         kwargs["privacy"] = helpers.privacy()
     if target.get("official"):
-        kwargs["official"] = helpers.official(target["official"])
+        roster = helpers.official(target["official"])
+        if not roster:
+            # An empty roster would flag every model as deprecated; refuse.
+            raise FetchError("official roster for %r unavailable"
+                             % target["official"])
+        kwargs["official"] = roster
 
     if target.get("prices"):
         kwargs["prices"] = helpers.prices(target["prices"])
 
     payload = modelsdev.build_provider(api, target["source"], source_meta,
                                        **kwargs)
+    dropped = (payload["levers"].get("deprecated") or {}).get("dropped")
+    if dropped:
+        log("  drop  %s: %d deprecated model(s)" % (feed_id, dropped))
     if target.get("prices") == "clinepass":
         enrich_cline_pass(payload, api, target["source"], kwargs["prices"],
                           helpers)
