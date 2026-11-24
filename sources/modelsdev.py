@@ -64,7 +64,7 @@ def _apply_official(entries, official_ids, provider_api):
 
 
 def _apply_caps(entries, caps):
-    """Attach monthly plan caps (and promo/trains flags) by id or name."""
+    """Attach plan caps and privacy flags (promo/trains/zdr/regions) by id."""
     table = caps.get("models") or {}
     if not table:
         return 0
@@ -86,6 +86,12 @@ def _apply_caps(entries, caps):
             entry["promo"] = item["promo"]
         if item.get("trains"):
             entry["trains"] = True
+        if item.get("zdr") is not None:
+            entry["zdr"] = bool(item["zdr"])
+        if item.get("limited_regions"):
+            entry["limited_regions"] = True
+        if item.get("privacy"):
+            entry["privacy"] = item["privacy"]
     return hits
 
 

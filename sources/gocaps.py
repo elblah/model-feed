@@ -1,4 +1,4 @@
-"""OpenCode Go plan caps and training flags.
+"""OpenCode Go plan caps, training and retention flags.
 
 The public docs page no longer carries the per-model cap tables (they moved
 behind the console), so this source reads the console itself. The console is
@@ -11,11 +11,15 @@ server-rendered and needs no auth:
 The chunk holds a JavaScript object literal with one object per model:
 
   id, name, cost{text{...}, multipliers[...]}, api{...},
-  go{monthly_usage{go, go-plus, go-teams}, training, zdr, limited_regions}
+  go{monthly_usage{go, go-plus, go-teams}, training, zdr, limited_regions,
+     featured}
 
 monthly_usage is the $ allowance of each plan; a model without an entry has no
-cap (free / unlimited). training and zdr are booleans. This single fetch after
-the asset resolution replaces the old caps + privacy + endpoint tables.
+cap (free / unlimited). The console Privacy column is driven by two flags: zdr
+true shows "0 days" retention, false shows "Not ZDR"; training marks models
+that learn from request data. limited_regions marks models served from a
+subset of regions only. This single fetch after the asset resolution replaces
+the old caps + privacy + endpoint tables.
 
 Asset names are content-hashed, so the chunk name is resolved on every run
 while the bodies are cached under stable names. Plan prices still live on the
@@ -26,7 +30,9 @@ Returned payload (consumed by sources/modelsdev._apply_caps):
 
     {"plan_default": "go",
      "plans": [{"id", "name", "price_usd", "covers"}, ...],
-     "models": {model_id: {"cap_usd": {plan: $}, "trains": True}}}
+     "models": {model_id: {"cap_usd": {plan: $}, "trains": True,
+                           "zdr": False, "limited_regions": True,
+                           "privacy": "zdr-retained"}}}
 """
 
 import json
@@ -132,6 +138,21 @@ def usd(value):
     return None
 
 
+def privacy_tag(flags):
+    """Console go flags -> zen-style privacy tag, None when unspecified.
+
+    training        -> "trains"       (request data may improve the model)
+    no training+zdr -> "zdr"          (console shows "0 days" retention)
+    no training     -> "zdr-retained" (console shows "Not ZDR": data kept,
+                                       but not used for training)
+    """
+    if not isinstance(flags, dict) or "zdr" not in flags:
+        return None
+    if flags.get("training"):
+        return "trains"
+    return "zdr" if flags.get("zdr") else "zdr-retained"
+
+
 def parse(chunk, markdown=""):
     """Chunk body (+ docs markdown) -> caps payload (see module docstring)."""
     data = json.loads(js_to_json(literal(chunk)))
@@ -158,6 +179,13 @@ def parse(chunk, markdown=""):
             entry["cap_usd"] = caps
         if flags.get("training"):
             entry["trains"] = True
+        if "zdr" in flags:
+            entry["zdr"] = bool(flags.get("zdr"))
+        if flags.get("limited_regions"):
+            entry["limited_regions"] = True
+        tag = privacy_tag(flags)
+        if tag:
+            entry["privacy"] = tag
         if entry:
             models[model_id] = entry
 
